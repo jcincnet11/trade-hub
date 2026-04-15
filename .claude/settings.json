@@ -1,0 +1,49 @@
+{
+  "statusLine": {
+    "type": "command",
+    "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/statusline.sh\""
+  },
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "WebFetch(*)",
+      "WebSearch(*)"
+    ]
+  },
+  "companyAnnouncements": [
+    "⚡ VibeStack — Give your AI the context to build, not just guess.",
+    "⚡ VibeStack — Structure for AI-assisted development.",
+    "⚡ Powered by VibeStack — vibestack.md",
+    "⚡ VibeStack active — your agents know what to do.",
+    "📦 VibeStack installed — run /vibestack to set up, /todo to get to work.",
+    "⚡ VibeStack — The docs you write today prevent your AI from re-discovering the same lessons tomorrow.",
+    "⚡ VibeStack — Because 'just figure it out' isn't a prompt strategy.",
+    "⚡ Vibes: stacked. Chaos: contained.",
+    "⚡ VibeStack — Your AI has read the docs. Have you?"
+  ],
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/notify-done.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}
