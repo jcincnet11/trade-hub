@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useStrategies } from '@/lib/hooks/useStrategies'
 import { Strategy, SignalType, MarketType } from '@/lib/types/strategy'
 import { Plus, Trash2, Edit2 } from 'lucide-react'
+import SetupScanner from './_components/SetupScanner'
 
 const SIGNAL_LABELS: Record<SignalType, string> = {
   'bullish-reversal': 'Bullish reversal',
@@ -72,6 +73,8 @@ export default function StrategiesPage() {
 
   return (
     <div>
+      <SetupScanner />
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <div>
           <h1 style={{ fontSize: '18px', fontWeight: 600 }}>Strategies</h1>

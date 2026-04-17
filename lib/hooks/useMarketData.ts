@@ -1,21 +1,9 @@
 'use client'
 import useSWR from 'swr'
 import { OHLCCandle } from '../types/market'
+import { COIN_MAP } from '../coingecko'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
-
-const COIN_MAP: Record<string, { name: string; symbol: string }> = {
-  bitcoin: { name: 'Bitcoin', symbol: 'BTC' },
-  ethereum: { name: 'Ethereum', symbol: 'ETH' },
-  solana: { name: 'Solana', symbol: 'SOL' },
-  ripple: { name: 'XRP', symbol: 'XRP' },
-  binancecoin: { name: 'BNB', symbol: 'BNB' },
-  cardano: { name: 'Cardano', symbol: 'ADA' },
-  'avalanche-2': { name: 'Avalanche', symbol: 'AVAX' },
-  dogecoin: { name: 'Dogecoin', symbol: 'DOGE' },
-  polkadot: { name: 'Polkadot', symbol: 'DOT' },
-  'matic-network': { name: 'Polygon', symbol: 'MATIC' },
-}
 
 type CoinGeckoRow = {
   usd?: number
