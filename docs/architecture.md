@@ -2,7 +2,7 @@
 
 ## Current state
 
-Trade Hub is a working single-user trading dashboard built on Next.js 16 (App Router). There is no backend service, no database, and no auth. All user state (strategies, watchlist) lives in `localStorage`; all market data comes from free-tier third-party APIs proxied through Next.js route handlers. The app is functionally complete for its current scope — the open work is production hardening (tests, error boundaries, observability, deploy).
+Trade Hub is a working single-user trading dashboard built on Next.js 16 (App Router). There is no backend service, no database, and no auth. All user state (strategies, watchlist) lives in `localStorage`; all market data comes from free-tier third-party APIs proxied through Next.js route handlers. Error/not-found boundaries and per-route loading skeletons are in place; API route handlers log failures via `console.error` before returning typed 500s. The open hardening work is tests, structured logging (pino), Zod response validation, CI, and deploy.
 
 ## Stack
 
@@ -25,16 +25,22 @@ Trade Hub is a working single-user trading dashboard built on Next.js 16 (App Ro
   - `app/api/crypto/prices/route.ts` — proxies CoinGecko `/simple/price` for 10 hardcoded coin IDs; `revalidate: 60`.
   - `app/api/crypto/ohlc/[id]/route.ts` — proxies CoinGecko `/coins/{id}/ohlc?days=14`; normalizes tuples to `{time, open, high, low, close}`; `revalidate: 300`.
   - `app/api/forex/rates/route.ts` — proxies ExchangeRate API `/latest/USD`; `revalidate: 3600`.
+  - `app/api/scanner/route.ts` — MM Confluence v2 setup scanner; parses `tf` (`30min|4H|1D`) and `symbols`, calls `lib/coingecko` helpers for OHLC + volume, runs `detectPatterns` and `scoreSetup`, returns `{ results, skipped }`.
+  - `app/error.tsx` / `app/not-found.tsx` — branded error boundary and 404.
+  - `app/{crypto,forex,strategies,watchlist}/loading.tsx` — skeleton placeholders.
+  - `app/strategies/_components/SetupScanner.tsx` — client component rendering live scanner cards.
   - `app/page.tsx` — dashboard aggregating sentiment across all tracked pairs.
   - `app/crypto/`, `app/forex/`, `app/strategies/`, `app/watchlist/` — feature pages.
 - `components/` — UI organized by purpose: `layout/` (Sidebar), `market/` (PairCard, PatternBadge, PriceChart), `ui/` (Badge, Card).
 - `lib/`
+  - `coingecko.ts` — `COIN_MAP` + `fetchOHLC`/`fetchVolumes` helpers + `Timeframe` → `days` mapping.
   - `hooks/` — SWR + localStorage hooks (`useMarketData`, `useStrategies`, `useWatchlist`).
   - `patterns/` — 21 candlestick detector functions plus the `detectPatterns` orchestrator.
+  - `scanner/mmConfluence.ts` — pure indicators and scoring (`ema`, `rsi`, `detectMWFormation`, `scoreSetup`, `checkInvalidation`, `sessionInfo`).
   - `types/` — `market.ts`, `strategy.ts`.
   - `utils/formatters.ts` — price/change/volume/market-cap formatting.
 - `public/` — static assets served from `/`.
-- `docs/` — living documentation.
+- `docs/` — living documentation; `docs/strategies/` holds per-strategy specs (e.g. `mm-confluence-v2.md`).
 - `.claude/` — Claude Code skills, hooks, and settings.
 
 ## Data flow
@@ -49,13 +55,18 @@ Trade Hub is a working single-user trading dashboard built on Next.js 16 (App Ro
 
 `lib/patterns/patterns.ts` defines 21 detector functions — one per candlestick pattern. Each takes 1–3 candles and returns a `PatternResult` (name, type: bullish/bearish/neutral, confidence, description, signal) or `null`. `lib/patterns/detector.ts` exposes `detectPatterns(candles)` which runs every detector on the most recent candles, filters nulls, sorts by confidence, and returns the top matches. Requires at least 3 candles. Runs fully client-side on OHLC data fetched for the currently selected crypto pair.
 
+## MM Confluence scanner
+
+`/api/scanner` is the server side of the MM Confluence v2 strategy (spec in `docs/strategies/mm-confluence-v2.md`). For each crypto symbol in the watchlist it fetches entry-TF OHLC, higher-TF OHLC (for EMA 200 alignment), and a volume series from `/market_chart`; runs `detectPatterns` and then `scoreSetup` to produce a 7-point checklist and a grade (A ≥ 6, B 4–5, C ≤ 3). `SetupScanner.tsx` on `/strategies` polls this route every 60s via SWR, filters to A/B grades, and renders checklist cards. Pure indicator math (`ema`, `rsi`, `detectMWFormation`, `scoreSetup`) lives in `lib/scanner/mmConfluence.ts` so both the route and the component consume the same source — the component re-exports it for discoverability. Forex symbols are skipped with `forex-no-ohlc` until an OHLC provider is wired up.
+
 ## External services
 
 | Service            | Endpoint                                                       | Auth | Cache (revalidate) | Notes                                                |
 |--------------------|----------------------------------------------------------------|------|--------------------|------------------------------------------------------|
 | CoinGecko          | `api.coingecko.com/api/v3/simple/price`                        | none | 60s                | 10 hardcoded coins: BTC, ETH, SOL, XRP, BNB, ADA, AVAX, DOGE, DOT, MATIC |
-| CoinGecko          | `api.coingecko.com/api/v3/coins/{id}/ohlc?days=14`             | none | 300s               | 14-day daily candles for the pattern detector        |
-| ExchangeRate API   | `api.exchangerate-api.com/v4/latest/USD`                       | none | 3600s              | 8 pairs derived from USD rates (some inverted)       |
+| CoinGecko          | `api.coingecko.com/api/v3/coins/{id}/ohlc?days=N`              | none | 300s               | Detail panel uses `days=14`; scanner uses variable `days` (1/30/180). Granularity is locked by `days` (1→30min, 2–30→4H, 31+→daily). |
+| CoinGecko          | `api.coingecko.com/api/v3/coins/{id}/market_chart?days=N`      | none | 300s               | Scanner only: per-candle volume series (aligned to OHLC timestamps for the "volume > 1.5× avg20" check). |
+| ExchangeRate API   | `api.exchangerate-api.com/v4/latest/USD`                       | none | 3600s              | 8 pairs derived from USD rates (some inverted). Spot-only — no OHLC, so the scanner currently skips forex. |
 
 No `.env` files are required today. When a service that needs a key is added, document it in `.env.example` and load via `process.env` in the route handler only — never ship a key to the client.
 
@@ -77,11 +88,10 @@ This is **not** the Next.js most AI training data knows. Before writing framewor
 
 These are tracked in `TODO.md`; listing here for architectural awareness:
 
-- No test runner wired up (`make test` is a stub).
-- No `app/error.tsx`, `app/not-found.tsx`, or per-segment `loading.tsx` — users see Next.js defaults on failure.
-- No input validation on API responses before they're returned to the client; malformed upstream data could crash hooks.
-- No structured logging; route-handler `catch` blocks swallow errors silently.
-- No error tracking (Sentry or equivalent).
+- No test runner wired up (`make test` is a stub). `lib/patterns/` and `lib/scanner/` are the highest-value regression surfaces.
+- No input validation on API responses before they're returned to the client; a CoinGecko or ExchangeRate schema drift still crashes hooks (Zod not yet added).
+- Logging is `console.error` breadcrumbs only — no structured logger (pino) and no error-tracking service (Sentry).
+- No forex OHLC source, so the MM Confluence scanner is crypto-only for now.
 - No CI workflow under `.github/workflows/`.
 - No deploy target configured — `vercel link` has not been run.
 

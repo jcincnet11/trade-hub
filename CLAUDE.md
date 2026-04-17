@@ -38,12 +38,20 @@ Complex commands that need real bash logic live in `scripts/` and are called fro
 app/                    # Next.js App Router
   api/                  #   Route handlers (proxy CoinGecko + ExchangeRate API)
     crypto/prices/      #     GET  live prices for 10 coins
-    crypto/ohlc/[id]/   #     GET  14-day OHLC candles for one coin
+    crypto/ohlc/[id]/   #     GET  OHLC candles (granularity from days param)
     forex/rates/        #     GET  USD-based rates for 8 pairs
+    scanner/            #     GET  MM Confluence v2 setup scanner (crypto-only)
   crypto/               #   Crypto explorer (grid + detail panel w/ chart + patterns)
+    loading.tsx         #     Skeleton grid for first paint
   forex/                #   Forex pair cards
-  strategies/           #   Strategy CRUD (localStorage)
+    loading.tsx
+  strategies/           #   Strategy CRUD + live scanner (localStorage)
+    _components/        #     SetupScanner.tsx (live MM Confluence cards)
+    loading.tsx
   watchlist/            #   User-selected pairs (localStorage)
+    loading.tsx
+  error.tsx             #   Branded error boundary w/ reset
+  not-found.tsx         #   Branded 404 page
   layout.tsx            #   Root layout + sidebar
   page.tsx              #   Dashboard (aggregated sentiment)
 components/
@@ -51,12 +59,15 @@ components/
   market/               # PairCard, PatternBadge, PriceChart
   ui/                   # Badge, Card primitives
 lib/
+  coingecko.ts          # COIN_MAP + fetchOHLC / fetchVolumes helpers
   hooks/                # useMarketData, useStrategies, useWatchlist (SWR + localStorage)
   patterns/             # 21 candlestick detectors + orchestrator (detectPatterns)
+  scanner/              # MM Confluence v2: ema, rsi, detectMWFormation, scoreSetup
   types/                # market.ts, strategy.ts
   utils/formatters.ts   # Price/change/volume/market-cap formatting
 public/                 # Static assets
 docs/                   # Living documentation
+  strategies/           #   Per-strategy specs (e.g. mm-confluence-v2.md)
 Makefile                # Project operations — single entry point for all commands
 scripts/                # Complex build/deploy scripts called from Makefile
 TODO.md                 # Task tracking (see TODO Workflow below)
