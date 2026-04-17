@@ -34,6 +34,12 @@ test-e2e: ## Run Playwright E2E tests (requires `npx playwright install chromium
 lint: ## Lint the codebase
 	npm run lint
 
+fmt: ## Format the codebase with Prettier
+	npm run fmt
+
+fmt-check: ## Verify formatting without writing changes
+	npm run fmt:check
+
 typecheck: ## Run TypeScript type checking
 	npx tsc --noEmit
 
