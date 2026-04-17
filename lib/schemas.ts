@@ -60,3 +60,27 @@ export const exportBundleSchema = z.object({
   watchlist: watchlistArraySchema,
 })
 export type ExportBundle = z.infer<typeof exportBundleSchema>
+
+// Trade-plan strategies — the new model on /strategies (entry/stop/target,
+// pattern watch, auto-trigger on live pattern detection).
+export const TRADE_PLAN_TIMEFRAMES = ['1D', '7D', '30D', '90D', '180D', '1Y'] as const
+export type TradePlanTimeframe = (typeof TRADE_PLAN_TIMEFRAMES)[number]
+
+export const tradePlanSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  pair: z.string(),
+  market: z.enum(['crypto', 'forex']),
+  pattern: z.string(),
+  timeframe: z.enum(TRADE_PLAN_TIMEFRAMES),
+  direction: z.enum(['long', 'short']),
+  entry: z.number(),
+  stopLoss: z.number(),
+  takeProfit: z.number(),
+  notes: z.string(),
+  status: z.enum(['active', 'triggered', 'closed']),
+  createdAt: z.number(),
+  triggeredAt: z.number().optional(),
+})
+export const tradePlansArraySchema = z.array(tradePlanSchema)
+export type TradePlan = z.infer<typeof tradePlanSchema>

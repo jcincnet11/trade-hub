@@ -1,6 +1,37 @@
 import { OHLCCandle, PatternHit, PatternResult } from '../types/market'
 import * as P from './patterns'
 
+// Exhaustive list of pattern names the engine can emit, plus "Any" for the
+// strategy modal's pattern-watch dropdown.
+export const PATTERN_NAMES = [
+  'Any',
+  'Doji',
+  'Long-legged Doji',
+  'Gravestone Doji',
+  'Dragonfly Doji',
+  'Hammer',
+  'Inverted Hammer',
+  'Hanging Man',
+  'Shooting Star',
+  'Bullish Marubozu',
+  'Bearish Marubozu',
+  'Spinning Top',
+  'Bullish Engulfing',
+  'Bearish Engulfing',
+  'Bullish Harami',
+  'Bearish Harami',
+  'Piercing Line',
+  'Dark Cloud Cover',
+  'Tweezer Top',
+  'Tweezer Bottom',
+  'Morning Star',
+  'Evening Star',
+  'Three White Soldiers',
+  'Three Black Crows',
+] as const
+
+export type PatternName = (typeof PATTERN_NAMES)[number]
+
 // Run every detector at every candle index, returning a flat list of hits
 // with index + time for chart markers. O(n × detectors); fine for ≤ 500 candles.
 export function detectAll(candles: OHLCCandle[]): PatternHit[] {
