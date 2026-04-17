@@ -56,7 +56,7 @@ function DetailPanel({ item, onClose }: { item: MarketItem; onClose: () => void 
 }
 
 export default function CryptoPage() {
-  const { prices, isLoading, refresh } = useCryptoPrices()
+  const { prices, isLoading, error, refresh } = useCryptoPrices()
   const { toggle, isWatched } = useWatchlist()
   const [selected, setSelected] = useState<string | null>(null)
 
@@ -86,8 +86,21 @@ export default function CryptoPage() {
 
       {selectedItem && <DetailPanel item={selectedItem} onClose={() => setSelected(null)} />}
 
-      {isLoading ? (
-        <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Loading prices...</p>
+      {error && (
+        <div style={{
+          background: 'var(--bg-card)', border: '0.5px solid var(--red)', borderRadius: '7px',
+          padding: '10px 12px', marginBottom: '12px', color: 'var(--red)', fontSize: '12px',
+        }}>
+          Couldn&apos;t reach the CoinGecko proxy. Retrying automatically — click Refresh to try now.
+        </div>
+      )}
+
+      {isLoading && prices.length === 0 ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px' }}>
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} style={{ background: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: '10px', height: '96px' }} />
+          ))}
+        </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px' }}>
           {items.map((item) => (

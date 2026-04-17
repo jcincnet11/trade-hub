@@ -45,9 +45,9 @@ Status markers: `[ ]` open · `[~]` in progress · `[x]` done.
 
 ## UX polish
 
-- [ ] Replace the "Loading..." text on `/crypto` and `/forex` with skeleton cards matching the final layout.
-- [ ] Surface network/upstream errors in-page (today failed SWR fetches are invisible beyond a blank card).
-- [ ] Add a confirm step to strategy delete — current single-click delete is easy to trigger accidentally.
+- [x] Replace the "Loading..." text on `/crypto` and `/forex` with skeleton cards matching the final layout.
+- [x] Surface network/upstream errors in-page on /crypto, /forex, /watchlist.
+- [x] Add a confirm step to strategy delete.
 
 ## Developer experience
 

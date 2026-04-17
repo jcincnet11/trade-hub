@@ -5,8 +5,8 @@ import { formatPrice, formatChange, changeColor } from '@/lib/utils/formatters'
 import { Trash2 } from 'lucide-react'
 
 export default function WatchlistPage() {
-  const { prices } = useCryptoPrices()
-  const { rates } = useForexRates()
+  const { prices, error: cryptoError } = useCryptoPrices()
+  const { rates, error: forexError } = useForexRates()
   const { watchlist, remove } = useWatchlist()
 
   const allMarkets = [...prices, ...rates]
@@ -18,6 +18,15 @@ export default function WatchlistPage() {
         <h1 style={{ fontSize: '18px', fontWeight: 600 }}>Watchlist</h1>
         <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{watched.length} pair{watched.length !== 1 ? 's' : ''} saved</p>
       </div>
+
+      {(cryptoError || forexError) && (
+        <div style={{
+          background: 'var(--bg-card)', border: '0.5px solid var(--red)', borderRadius: '7px',
+          padding: '10px 12px', marginBottom: '12px', color: 'var(--red)', fontSize: '12px',
+        }}>
+          Some market feeds couldn&apos;t load. Prices shown may be stale or missing.
+        </div>
+      )}
 
       {watched.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)', fontSize: '13px' }}>

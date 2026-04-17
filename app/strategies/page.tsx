@@ -229,7 +229,14 @@ export default function StrategiesPage() {
                 </div>
                 <div style={{ display: 'flex', gap: '6px', marginLeft: '12px' }}>
                   <button onClick={() => handleEdit(s)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><Edit2 size={13} /></button>
-                  <button onClick={() => remove(s.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><Trash2 size={13} /></button>
+                  <button
+                    onClick={() => {
+                      if (window.confirm(`Delete strategy "${s.name}"? This can't be undone.`)) remove(s.id)
+                    }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+                  >
+                    <Trash2 size={13} />
+                  </button>
                 </div>
               </div>
             </div>
