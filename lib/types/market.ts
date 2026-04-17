@@ -32,6 +32,16 @@ export interface PatternResult {
   signal: string
 }
 
+// Series-variant match — one per pattern occurrence along a candle series.
+// Used by chart markers on detail pages.
+export interface PatternHit {
+  name: string
+  type: 'bullish' | 'bearish' | 'neutral'
+  confidence: number
+  index: number
+  time: number
+}
+
 export interface MarketItem {
   id: string
   symbol: string

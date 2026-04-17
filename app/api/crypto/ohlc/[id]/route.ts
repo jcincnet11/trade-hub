@@ -2,15 +2,24 @@ import { NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
 import { ohlcResponseSchema } from '@/lib/schemas'
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+const ALLOWED_DAYS = new Set([1, 7, 14, 30, 90, 180, 365])
+
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const url = new URL(request.url)
+  const daysRaw = url.searchParams.get('days')
+  const days = daysRaw ? Number(daysRaw) : 14
+  if (!Number.isFinite(days) || !ALLOWED_DAYS.has(days)) {
+    return NextResponse.json(
+      { error: `Invalid days (expected one of ${[...ALLOWED_DAYS].join(', ')})` },
+      { status: 400 },
+    )
+  }
+
   try {
     const res = await fetch(
-      `https://api.coingecko.com/api/v3/coins/${id}/ohlc?vs_currency=usd&days=14`,
-      { next: { revalidate: 300 } }
+      `https://api.coingecko.com/api/v3/coins/${id}/ohlc?vs_currency=usd&days=${days}`,
+      { next: { revalidate: 300 } },
     )
     if (!res.ok) throw new Error(`CoinGecko OHLC ${res.status}`)
     const raw = await res.json()

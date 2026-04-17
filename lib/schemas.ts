@@ -8,7 +8,7 @@ export const cryptoPricesResponseSchema = z.record(
     usd_24h_change: z.number().optional(),
     usd_24h_vol: z.number().optional(),
     usd_market_cap: z.number().optional(),
-  })
+  }),
 )
 export type CryptoPricesResponse = z.infer<typeof cryptoPricesResponseSchema>
 
@@ -28,6 +28,12 @@ export const forexRatesResponseSchema = z.object({
   rates: z.record(z.string(), z.number()),
 })
 export type ForexRatesResponse = z.infer<typeof forexRatesResponseSchema>
+
+// Frankfurter /v1/{start}..{end}?base=X&symbols=Y — for synthesized forex OHLC.
+export const frankfurterResponseSchema = z.object({
+  rates: z.record(z.string(), z.record(z.string(), z.number())),
+})
+export type FrankfurterResponse = z.infer<typeof frankfurterResponseSchema>
 
 // Persistent user data — used both to validate on localStorage read and
 // to validate imported export bundles.

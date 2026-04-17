@@ -1,5 +1,51 @@
-import { OHLCCandle, PatternResult } from '../types/market'
+import { OHLCCandle, PatternHit, PatternResult } from '../types/market'
 import * as P from './patterns'
+
+// Run every detector at every candle index, returning a flat list of hits
+// with index + time for chart markers. O(n × detectors); fine for ≤ 500 candles.
+export function detectAll(candles: OHLCCandle[]): PatternHit[] {
+  const hits: PatternHit[] = []
+  if (!candles || candles.length < 3) return hits
+  for (let i = 2; i < candles.length; i++) {
+    const c = candles[i]
+    const prev1 = candles[i - 1]
+    const prev2 = candles[i - 2]
+    const history = candles.slice(0, i)
+
+    const singles = [
+      P.detectDoji(c),
+      P.detectLongLeggedDoji(c),
+      P.detectGravestoneDoji(c),
+      P.detectDragonflyDoji(c),
+      P.detectMarubozu(c),
+      P.detectSpinningTop(c),
+      P.detectHammer(c, history),
+      P.detectHangingMan(c, history),
+      P.detectInvertedHammer(c, history),
+      P.detectShootingStar(c, history),
+    ]
+    const doubles = [
+      P.detectBullishEngulfing(c, prev1),
+      P.detectBearishEngulfing(c, prev1),
+      P.detectBullishHarami(c, prev1),
+      P.detectBearishHarami(c, prev1),
+      P.detectPiercingLine(c, prev1),
+      P.detectDarkCloudCover(c, prev1),
+      P.detectTweezers(c, prev1),
+    ]
+    const triples = [
+      P.detectMorningStar(c, prev1, prev2),
+      P.detectEveningStar(c, prev1, prev2),
+      P.detectThreeWhiteSoldiers(c, prev1, prev2),
+      P.detectThreeBlackCrows(c, prev1, prev2),
+    ]
+    ;[...singles, ...doubles, ...triples].forEach((r) => {
+      if (r)
+        hits.push({ name: r.name, type: r.type, confidence: r.confidence, index: i, time: c.time })
+    })
+  }
+  return hits
+}
 
 export function detectPatterns(candles: OHLCCandle[]): PatternResult[] {
   if (!candles || candles.length < 3) return []
