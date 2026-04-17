@@ -1,64 +1,16 @@
 'use client'
-import { useMemo, useState } from 'react'
-import { useCryptoPrices, useCryptoOHLC } from '@/lib/hooks/useMarketData'
+import { useRouter } from 'next/navigation'
+import { useCryptoPrices } from '@/lib/hooks/useMarketData'
 import { useWatchlist } from '@/lib/hooks/useWatchlist'
-import { detectPatterns } from '@/lib/patterns/detector'
 import { PairCard } from '@/components/market/PairCard'
-import { PriceChart } from '@/components/market/PriceChart'
-import { PatternBadge } from '@/components/market/PatternBadge'
-import { formatPrice, formatChange, formatVolume, formatMarketCap, changeColor } from '@/lib/utils/formatters'
+import { Sparkline } from '@/components/market/Sparkline'
 import { MarketItem } from '@/lib/types/market'
 import { RefreshCw } from 'lucide-react'
 
-function DetailPanel({ item, onClose }: { item: MarketItem; onClose: () => void }) {
-  const { candles } = useCryptoOHLC(item.id)
-  const patterns = useMemo(
-    () => (candles.length ? detectPatterns(candles) : item.patterns),
-    [candles, item.patterns]
-  )
-
-  return (
-    <div style={{
-      background: 'var(--bg-card)', border: '0.5px solid var(--border)',
-      borderRadius: '10px', padding: '1.25rem', marginBottom: '1.5rem',
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <div>
-          <h2 style={{ fontSize: '16px', fontWeight: 600 }}>{item.name}</h2>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{item.symbol} · Crypto</p>
-        </div>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '18px' }}>×</button>
-      </div>
-
-      <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
-        <div>
-          <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Price</p>
-          <p style={{ fontSize: '24px', fontWeight: 700 }}>{formatPrice(item.price)}</p>
-        </div>
-        <div>
-          <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>24h change</p>
-          <p style={{ fontSize: '18px', fontWeight: 600, color: changeColor(item.change24h) }}>{formatChange(item.change24h)}</p>
-        </div>
-        {item.volume24h !== undefined && <div><p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Volume</p><p style={{ fontSize: '14px', fontWeight: 500 }}>{formatVolume(item.volume24h)}</p></div>}
-        {item.marketCap !== undefined && <div><p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Market cap</p><p style={{ fontSize: '14px', fontWeight: 500 }}>{formatMarketCap(item.marketCap)}</p></div>}
-      </div>
-
-      {candles.length > 0 && <div style={{ marginBottom: '1rem' }}><PriceChart candles={candles} /></div>}
-
-      {patterns.length > 0 && (
-        <div>
-          <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Detected patterns</p>
-          {patterns.map((p, i) => <PatternBadge key={i} pattern={p} />)}
-        </div>
-      )}
-    </div>
-  )
-}
-
 export default function CryptoPage() {
+  const router = useRouter()
   const { prices, isLoading, error, refresh } = useCryptoPrices()
   const { toggle, isWatched } = useWatchlist()
-  const [selected, setSelected] = useState<string | null>(null)
 
   const items: MarketItem[] = prices.map((p) => ({
     ...p,
@@ -66,51 +18,94 @@ export default function CryptoPage() {
     type: 'crypto',
   }))
 
-  const selectedItem = items.find((i) => i.id === selected)
-
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '1.5rem',
+        }}
+      >
         <div>
           <h1 style={{ fontSize: '18px', fontWeight: 600 }}>Crypto</h1>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>Live prices · auto-refresh 60s</p>
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            Live prices · auto-refresh 60s · click a card for detail
+          </p>
         </div>
-        <button onClick={() => refresh()} style={{
-          background: 'none', border: '0.5px solid var(--border)', borderRadius: '7px',
-          padding: '6px 10px', cursor: 'pointer', color: 'var(--text-secondary)',
-          display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px',
-        }}>
+        <button
+          onClick={() => refresh()}
+          style={{
+            background: 'none',
+            border: '0.5px solid var(--border)',
+            borderRadius: '7px',
+            padding: '6px 10px',
+            cursor: 'pointer',
+            color: 'var(--text-secondary)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            fontSize: '12px',
+          }}
+        >
           <RefreshCw size={12} /> Refresh
         </button>
       </div>
 
-      {selectedItem && <DetailPanel item={selectedItem} onClose={() => setSelected(null)} />}
-
       {error && (
-        <div style={{
-          background: 'var(--bg-card)', border: '0.5px solid var(--red)', borderRadius: '7px',
-          padding: '10px 12px', marginBottom: '12px', color: 'var(--red)', fontSize: '12px',
-        }}>
-          Couldn&apos;t reach the CoinGecko proxy. Retrying automatically — click Refresh to try now.
+        <div
+          style={{
+            background: 'var(--bg-card)',
+            border: '0.5px solid var(--red)',
+            borderRadius: '7px',
+            padding: '10px 12px',
+            marginBottom: '12px',
+            color: 'var(--red)',
+            fontSize: '12px',
+          }}
+        >
+          Couldn&apos;t reach the CoinGecko proxy. Retrying automatically — click Refresh to try
+          now.
         </div>
       )}
 
       {isLoading && prices.length === 0 ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+            gap: '10px',
+          }}
+        >
           {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} style={{ background: 'var(--bg-card)', border: '0.5px solid var(--border)', borderRadius: '10px', height: '96px' }} />
+            <div
+              key={i}
+              style={{
+                background: 'var(--bg-card)',
+                border: '0.5px solid var(--border)',
+                borderRadius: '10px',
+                height: '96px',
+              }}
+            />
           ))}
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+            gap: '10px',
+          }}
+        >
           {items.map((item) => (
             <PairCard
               key={item.id}
               item={item}
-              selected={selected === item.id}
               watched={isWatched(item.id)}
-              onSelect={() => setSelected(selected === item.id ? null : item.id)}
+              onSelect={() => router.push(`/crypto/${item.id}`)}
               onWatch={() => toggle(item.id)}
+              sparkline={<Sparkline id={item.id} market="crypto" />}
             />
           ))}
         </div>
