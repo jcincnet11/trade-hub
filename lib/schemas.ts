@@ -28,3 +28,29 @@ export const forexRatesResponseSchema = z.object({
   rates: z.record(z.string(), z.number()),
 })
 export type ForexRatesResponse = z.infer<typeof forexRatesResponseSchema>
+
+// Persistent user data — used both to validate on localStorage read and
+// to validate imported export bundles.
+export const strategySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  signalType: z.enum(['bullish-reversal', 'bearish-reversal', 'continuation', 'breakout', 'scalp']),
+  marketType: z.enum(['crypto', 'forex', 'both']),
+  patterns: z.array(z.string()),
+  entryRules: z.string(),
+  exitRules: z.string(),
+  notes: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+})
+export const strategiesArraySchema = z.array(strategySchema)
+export const watchlistArraySchema = z.array(z.string())
+
+export const exportBundleSchema = z.object({
+  version: z.literal(1),
+  exportedAt: z.string(),
+  strategies: strategiesArraySchema,
+  watchlist: watchlistArraySchema,
+})
+export type ExportBundle = z.infer<typeof exportBundleSchema>

@@ -1,8 +1,10 @@
 'use client'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useStrategies } from '@/lib/hooks/useStrategies'
+import { useWatchlist } from '@/lib/hooks/useWatchlist'
 import { Strategy, SignalType, MarketType } from '@/lib/types/strategy'
-import { Plus, Trash2, Edit2 } from 'lucide-react'
+import { exportBundleSchema } from '@/lib/schemas'
+import { Plus, Trash2, Edit2, Download, Upload } from 'lucide-react'
 import SetupScanner from './_components/SetupScanner'
 
 const SIGNAL_LABELS: Record<SignalType, string> = {
@@ -35,10 +37,47 @@ const EMPTY: Omit<Strategy, 'id' | 'createdAt' | 'updatedAt'> = {
 }
 
 export default function StrategiesPage() {
-  const { strategies, add, update, remove } = useStrategies()
+  const { strategies, add, update, remove, replaceAll: replaceStrategies } = useStrategies()
+  const { watchlist, replaceAll: replaceWatchlist } = useWatchlist()
   const [showForm, setShowForm] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
   const [form, setForm] = useState(EMPTY)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+
+  const handleExport = () => {
+    const bundle = {
+      version: 1 as const,
+      exportedAt: new Date().toISOString(),
+      strategies,
+      watchlist,
+    }
+    const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `trade-hub-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleImport = async (file: File) => {
+    try {
+      const text = await file.text()
+      const parsed = exportBundleSchema.safeParse(JSON.parse(text))
+      if (!parsed.success) {
+        alert('That file isn’t a valid Trade Hub export.')
+        return
+      }
+      const ok = window.confirm(
+        `Replace current data with ${parsed.data.strategies.length} strategies and ${parsed.data.watchlist.length} watchlist items?`
+      )
+      if (!ok) return
+      replaceStrategies(parsed.data.strategies)
+      replaceWatchlist(parsed.data.watchlist)
+    } catch {
+      alert('Could not read that file.')
+    }
+  }
 
   const handleSubmit = () => {
     if (!form.name.trim()) return
@@ -80,13 +119,48 @@ export default function StrategiesPage() {
           <h1 style={{ fontSize: '18px', fontWeight: 600 }}>Strategies</h1>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>Your personal trading playbook</p>
         </div>
-        <button onClick={() => { setShowForm(!showForm); setEditId(null); setForm(EMPTY) }} style={{
-          display: 'flex', alignItems: 'center', gap: '5px',
-          background: 'var(--indigo)', border: 'none', borderRadius: '7px',
-          padding: '7px 12px', cursor: 'pointer', color: 'white', fontSize: '12px', fontWeight: 500,
-        }}>
-          <Plus size={13} /> Add strategy
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button
+            onClick={handleExport}
+            title="Export strategies + watchlist"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '4px',
+              background: 'var(--bg-secondary)', border: '0.5px solid var(--border)', borderRadius: '7px',
+              padding: '7px 10px', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '12px',
+            }}
+          >
+            <Download size={13} />
+          </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            title="Import a Trade Hub export file"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '4px',
+              background: 'var(--bg-secondary)', border: '0.5px solid var(--border)', borderRadius: '7px',
+              padding: '7px 10px', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '12px',
+            }}
+          >
+            <Upload size={13} />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,.json"
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) handleImport(file)
+              e.target.value = ''
+            }}
+          />
+          <button onClick={() => { setShowForm(!showForm); setEditId(null); setForm(EMPTY) }} style={{
+            display: 'flex', alignItems: 'center', gap: '5px',
+            background: 'var(--indigo)', border: 'none', borderRadius: '7px',
+            padding: '7px 12px', cursor: 'pointer', color: 'white', fontSize: '12px', fontWeight: 500,
+          }}>
+            <Plus size={13} /> Add strategy
+          </button>
+        </div>
       </div>
 
       {showForm && (

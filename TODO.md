@@ -14,9 +14,9 @@ Status markers: `[ ]` open · `[~]` in progress · `[x]` done.
 
 ## Data & state integrity
 
-- [ ] Guard `useStrategies`/`useWatchlist` against corrupt `localStorage` values (JSON parse failure currently throws). Fall back to empty state and log.
-- [ ] Add an export/import flow for strategies + watchlist so a cleared browser doesn't lose months of notes.
-- [ ] Decide whether to move strategies to a backing store (Supabase Postgres is the default); document the decision in `docs/architecture.md` before implementing.
+- [x] Guard `useStrategies`/`useWatchlist` against corrupt `localStorage` values (Zod-validate on load; reset + warn on invalid).
+- [x] Add an export/import flow for strategies + watchlist so a cleared browser doesn't lose months of notes.
+- [ ] Decide whether to move strategies to a backing store (Supabase Postgres is the default); document the decision in `docs/architecture.md` before implementing. *(needs product decision)*
 
 ## Testing
 

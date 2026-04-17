@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { watchlistArraySchema } from '../schemas'
 
 const KEY = 'trade-hub-watchlist'
 
@@ -7,8 +8,15 @@ const loadInitial = (): string[] => {
   if (typeof window === 'undefined') return []
   try {
     const saved = window.localStorage.getItem(KEY)
-    return saved ? JSON.parse(saved) : []
-  } catch {
+    if (!saved) return []
+    const parsed = watchlistArraySchema.safeParse(JSON.parse(saved))
+    if (!parsed.success) {
+      console.warn('[useWatchlist] corrupt localStorage; resetting', parsed.error.issues)
+      return []
+    }
+    return parsed.data
+  } catch (err) {
+    console.warn('[useWatchlist] JSON parse failed; resetting', err)
     return []
   }
 }
@@ -31,5 +39,7 @@ export function useWatchlist() {
 
   const isWatched = (id: string) => watchlist.includes(id)
 
-  return { watchlist, add, remove, toggle, isWatched }
+  const replaceAll = (list: string[]) => save(list)
+
+  return { watchlist, add, remove, toggle, isWatched, replaceAll }
 }

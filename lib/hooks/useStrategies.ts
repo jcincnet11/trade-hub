@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { Strategy } from '../types/strategy'
+import { strategiesArraySchema } from '../schemas'
 
 const KEY = 'trade-hub-strategies'
 
@@ -8,8 +9,15 @@ const loadInitial = (): Strategy[] => {
   if (typeof window === 'undefined') return []
   try {
     const saved = window.localStorage.getItem(KEY)
-    return saved ? JSON.parse(saved) : []
-  } catch {
+    if (!saved) return []
+    const parsed = strategiesArraySchema.safeParse(JSON.parse(saved))
+    if (!parsed.success) {
+      console.warn('[useStrategies] corrupt localStorage; resetting', parsed.error.issues)
+      return []
+    }
+    return parsed.data
+  } catch (err) {
+    console.warn('[useStrategies] JSON parse failed; resetting', err)
     return []
   }
 }
@@ -36,5 +44,9 @@ export function useStrategies() {
     save(strategies.filter((s) => s.id !== id))
   }
 
-  return { strategies, add, update, remove }
+  const replaceAll = (list: Strategy[]) => {
+    save(list)
+  }
+
+  return { strategies, add, update, remove, replaceAll }
 }
