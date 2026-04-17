@@ -1,4 +1,6 @@
 import { OHLCCandle } from './types/market'
+import { logger } from './logger'
+import { ohlcResponseSchema, marketChartResponseSchema } from './schemas'
 
 export interface CoinMeta {
   name: string
@@ -52,11 +54,16 @@ export async function fetchOHLC(id: string, days: number): Promise<OHLCCandle[] 
       { next: { revalidate: 300 } }
     )
     if (!res.ok) {
-      console.error('[coingecko.fetchOHLC]', id, `status=${res.status}`)
+      logger.error({ id, status: res.status }, '[coingecko.fetchOHLC] http error')
       return null
     }
-    const raw = (await res.json()) as number[][]
-    return raw.map((c) => ({
+    const raw = await res.json()
+    const parsed = ohlcResponseSchema.safeParse(raw)
+    if (!parsed.success) {
+      logger.error({ id, issues: parsed.error.issues }, '[coingecko.fetchOHLC] schema mismatch')
+      return null
+    }
+    return parsed.data.map((c) => ({
       time: Math.floor(c[0] / 1000),
       open: c[1],
       high: c[2],
@@ -64,7 +71,7 @@ export async function fetchOHLC(id: string, days: number): Promise<OHLCCandle[] 
       close: c[4],
     }))
   } catch (err) {
-    console.error('[coingecko.fetchOHLC]', id, err)
+    logger.error({ id, err }, '[coingecko.fetchOHLC] fetch failed')
     return null
   }
 }
@@ -81,13 +88,18 @@ export async function fetchVolumes(id: string, days: number): Promise<VolumePoin
       { next: { revalidate: 300 } }
     )
     if (!res.ok) {
-      console.error('[coingecko.fetchVolumes]', id, `status=${res.status}`)
+      logger.error({ id, status: res.status }, '[coingecko.fetchVolumes] http error')
       return null
     }
-    const data = (await res.json()) as { total_volumes?: [number, number][] }
-    return (data.total_volumes ?? []).map(([t, v]) => ({ time: Math.floor(t / 1000), volume: v }))
+    const raw = await res.json()
+    const parsed = marketChartResponseSchema.safeParse(raw)
+    if (!parsed.success) {
+      logger.error({ id, issues: parsed.error.issues }, '[coingecko.fetchVolumes] schema mismatch')
+      return null
+    }
+    return parsed.data.total_volumes.map(([t, v]) => ({ time: Math.floor(t / 1000), volume: v }))
   } catch (err) {
-    console.error('[coingecko.fetchVolumes]', id, err)
+    logger.error({ id, err }, '[coingecko.fetchVolumes] fetch failed')
     return null
   }
 }

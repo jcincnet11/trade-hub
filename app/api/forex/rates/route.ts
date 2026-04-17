@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
+import { forexRatesResponseSchema } from '@/lib/schemas'
 
 export async function GET() {
   try {
@@ -7,10 +9,15 @@ export async function GET() {
       { next: { revalidate: 3600 } }
     )
     if (!res.ok) throw new Error(`ExchangeRate ${res.status}`)
-    const data = await res.json()
-    return NextResponse.json(data.rates)
+    const raw = await res.json()
+    const parsed = forexRatesResponseSchema.safeParse(raw)
+    if (!parsed.success) {
+      logger.error({ issues: parsed.error.issues }, '[api/forex/rates] schema mismatch')
+      return NextResponse.json({ error: 'Invalid upstream response' }, { status: 502 })
+    }
+    return NextResponse.json(parsed.data.rates)
   } catch (err) {
-    console.error('[api/forex/rates]', err)
+    logger.error({ err }, '[api/forex/rates] fetch failed')
     return NextResponse.json({ error: 'Failed to fetch forex' }, { status: 500 })
   }
 }
