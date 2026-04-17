@@ -17,9 +17,11 @@ export const ohlcRowSchema = z.tuple([z.number(), z.number(), z.number(), z.numb
 export const ohlcResponseSchema = z.array(ohlcRowSchema)
 export type OHLCResponse = z.infer<typeof ohlcResponseSchema>
 
-// CoinGecko /coins/{id}/market_chart — only `total_volumes` is used.
+// CoinGecko /coins/{id}/market_chart — `prices` powers the intraday bucketer;
+// `total_volumes` powers the scanner. Both optional so either caller can ignore.
 export const marketChartResponseSchema = z.object({
-  total_volumes: z.array(z.tuple([z.number(), z.number()])),
+  prices: z.array(z.tuple([z.number(), z.number()])).optional(),
+  total_volumes: z.array(z.tuple([z.number(), z.number()])).optional(),
 })
 export type MarketChartResponse = z.infer<typeof marketChartResponseSchema>
 

@@ -5,10 +5,20 @@ import type { OHLCCandle } from './types/market'
 
 export type CryptoDays = 1 | 7 | 14 | 30 | 90 | 180 | 365
 export type ForexDays = 7 | 14 | 30 | 90 | 180 | 365
+export type CryptoIntraday = '15m' | '30m'
 
 export async function fetchCryptoOHLC(id: string, days: CryptoDays): Promise<OHLCCandle[]> {
   const res = await fetch(`/api/crypto/ohlc/${encodeURIComponent(id)}?days=${days}`)
   if (!res.ok) throw new Error(`crypto ohlc ${res.status}`)
+  return res.json()
+}
+
+export async function fetchCryptoIntraday(
+  id: string,
+  interval: CryptoIntraday,
+): Promise<OHLCCandle[]> {
+  const res = await fetch(`/api/crypto/intraday/${encodeURIComponent(id)}?interval=${interval}`)
+  if (!res.ok) throw new Error(`crypto intraday ${res.status}`)
   return res.json()
 }
 

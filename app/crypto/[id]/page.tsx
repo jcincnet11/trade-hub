@@ -4,34 +4,47 @@ import useSWR from 'swr'
 import Link from 'next/link'
 import { ArrowLeft, Plus } from 'lucide-react'
 import { CandleChart } from '@/components/market/CandleChart'
-import { fetchCryptoOHLC, type CryptoDays } from '@/lib/data'
+import {
+  fetchCryptoIntraday,
+  fetchCryptoOHLC,
+  type CryptoDays,
+  type CryptoIntraday,
+} from '@/lib/data'
 import { detectAll } from '@/lib/patterns/detector'
 import { COIN_MAP } from '@/lib/coingecko'
 import { formatPrice, formatChange } from '@/lib/utils/formatters'
 
-const TIMEFRAMES: Array<{ label: string; days: CryptoDays }> = [
-  { label: '1D', days: 1 },
-  { label: '7D', days: 7 },
-  { label: '14D', days: 14 },
-  { label: '30D', days: 30 },
-  { label: '90D', days: 90 },
-  { label: '180D', days: 180 },
-  { label: '1Y', days: 365 },
+type Timeframe =
+  | { label: string; kind: 'intraday'; interval: CryptoIntraday }
+  | { label: string; kind: 'daily'; days: CryptoDays }
+
+const TIMEFRAMES: Timeframe[] = [
+  { label: '15m', kind: 'intraday', interval: '15m' },
+  { label: '30m', kind: 'intraday', interval: '30m' },
+  { label: '1D', kind: 'daily', days: 1 },
+  { label: '7D', kind: 'daily', days: 7 },
+  { label: '14D', kind: 'daily', days: 14 },
+  { label: '30D', kind: 'daily', days: 30 },
+  { label: '90D', kind: 'daily', days: 90 },
+  { label: '180D', kind: 'daily', days: 180 },
+  { label: '1Y', kind: 'daily', days: 365 },
 ]
 
 export default function CryptoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const [days, setDays] = useState<CryptoDays>(30)
+  const [tf, setTf] = useState<Timeframe>(() => TIMEFRAMES[5]) // default 30D
   const meta = COIN_MAP[id]
 
   const {
     data: candles,
     isLoading,
     error,
-  } = useSWR(`crypto-ohlc-${id}-${days}`, () => fetchCryptoOHLC(id, days), {
-    refreshInterval: 60_000,
-    revalidateOnFocus: false,
-  })
+  } = useSWR(
+    `crypto-${tf.kind}-${id}-${tf.kind === 'intraday' ? tf.interval : tf.days}`,
+    () =>
+      tf.kind === 'intraday' ? fetchCryptoIntraday(id, tf.interval) : fetchCryptoOHLC(id, tf.days),
+    { refreshInterval: tf.kind === 'intraday' ? 60_000 : 60_000, revalidateOnFocus: false },
+  )
 
   const patterns = useMemo(() => (candles ? detectAll(candles) : []), [candles])
   const last = candles?.[candles.length - 1]
@@ -82,7 +95,7 @@ export default function CryptoDetailPage({ params }: { params: Promise<{ id: str
                 }}
               >
                 {change >= 0 ? '+' : ''}
-                {change.toFixed(2)}% · {days}d
+                {change.toFixed(2)}% · {tf.label}
               </span>
             </div>
           )}
@@ -107,24 +120,27 @@ export default function CryptoDetailPage({ params }: { params: Promise<{ id: str
         </Link>
       </div>
 
-      <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
-        {TIMEFRAMES.map((t) => (
-          <button
-            key={t.label}
-            onClick={() => setDays(t.days)}
-            style={{
-              padding: '5px 10px',
-              borderRadius: '6px',
-              fontSize: '11px',
-              cursor: 'pointer',
-              background: days === t.days ? 'var(--indigo-dim)' : 'var(--bg-secondary)',
-              border: `0.5px solid ${days === t.days ? 'var(--indigo)' : 'var(--border)'}`,
-              color: days === t.days ? 'var(--indigo)' : 'var(--text-secondary)',
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+        {TIMEFRAMES.map((t) => {
+          const active = t.label === tf.label
+          return (
+            <button
+              key={t.label}
+              onClick={() => setTf(t)}
+              style={{
+                padding: '5px 10px',
+                borderRadius: '6px',
+                fontSize: '11px',
+                cursor: 'pointer',
+                background: active ? 'var(--indigo-dim)' : 'var(--bg-secondary)',
+                border: `0.5px solid ${active ? 'var(--indigo)' : 'var(--border)'}`,
+                color: active ? 'var(--indigo)' : 'var(--text-secondary)',
+              }}
+            >
+              {t.label}
+            </button>
+          )
+        })}
       </div>
 
       {error && (
@@ -249,7 +265,7 @@ export default function CryptoDetailPage({ params }: { params: Promise<{ id: str
       {/* Keep the 24h change summary visible; the OHLC feed only covers the last N days. */}
       {last && (
         <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '10px' }}>
-          {formatChange(change)} over the last {days} day{days === 1 ? '' : 's'}. Auto-refresh 60s.
+          {formatChange(change)} over the last {tf.label}. Auto-refresh 60s.
         </p>
       )}
     </div>

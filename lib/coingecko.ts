@@ -51,7 +51,7 @@ export async function fetchOHLC(id: string, days: number): Promise<OHLCCandle[] 
   try {
     const res = await fetch(
       `https://api.coingecko.com/api/v3/coins/${id}/ohlc?vs_currency=usd&days=${days}`,
-      { next: { revalidate: 300 } }
+      { next: { revalidate: 300 } },
     )
     if (!res.ok) {
       logger.error({ id, status: res.status }, '[coingecko.fetchOHLC] http error')
@@ -85,7 +85,7 @@ export async function fetchVolumes(id: string, days: number): Promise<VolumePoin
   try {
     const res = await fetch(
       `https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=usd&days=${days}`,
-      { next: { revalidate: 300 } }
+      { next: { revalidate: 300 } },
     )
     if (!res.ok) {
       logger.error({ id, status: res.status }, '[coingecko.fetchVolumes] http error')
@@ -97,7 +97,10 @@ export async function fetchVolumes(id: string, days: number): Promise<VolumePoin
       logger.error({ id, issues: parsed.error.issues }, '[coingecko.fetchVolumes] schema mismatch')
       return null
     }
-    return parsed.data.total_volumes.map(([t, v]) => ({ time: Math.floor(t / 1000), volume: v }))
+    return (parsed.data.total_volumes ?? []).map(([t, v]) => ({
+      time: Math.floor(t / 1000),
+      volume: v,
+    }))
   } catch (err) {
     logger.error({ id, err }, '[coingecko.fetchVolumes] fetch failed')
     return null
