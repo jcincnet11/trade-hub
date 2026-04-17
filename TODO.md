@@ -1,60 +1,57 @@
 # TODO
 
-Rank-ordered path from fresh scaffold → production-ready. Start at the top.
+Rank-ordered path from the current working dashboard → production-ready. Start at the top.
 
 Status markers: `[ ]` open · `[~]` in progress · `[x]` done.
 
-## Product scope
+## Reliability (the app breaks silently today)
 
-- [ ] Write a one-paragraph product definition in `docs/product.md` — what Trade Hub is, who it's for, the one user flow that must work at launch. Nothing else can be prioritized correctly until this exists.
-- [ ] Translate the product definition into 3–5 core user stories; pick the MVP slice.
+- [ ] Add `app/error.tsx` and `app/not-found.tsx` with branded, useful UI — currently unhandled errors fall through to Next.js defaults.
+- [ ] Add `loading.tsx` for each data-fetching route segment (`app/crypto/`, `app/forex/`, `app/watchlist/`, `app/strategies/`) so first paint doesn't flash empty state.
+- [ ] Fix silent `catch` blocks in `app/api/**/route.ts` — at minimum, log the error and return a typed error response instead of swallowing it.
+- [ ] Validate upstream API responses with Zod in each route handler (`/api/crypto/prices`, `/api/crypto/ohlc/[id]`, `/api/forex/rates`) before returning them — a schema drift from CoinGecko or ExchangeRate API currently crashes the hooks.
+- [ ] Wire a request-scoped logger (pino) and replace `console.log`/silent catches in route handlers.
 
-## Foundation
+## Data & state integrity
 
-- [ ] Initialize git (`git init`), commit the scaffold, create the GitHub repo (`gh repo create`), push `main`.
-- [ ] Add `.env.example` documenting every env var the app expects; confirm `.env*.local` is ignored.
-- [ ] Create `components/` and `lib/` directories with placeholder `README.md` files describing the intended contents (shared UI primitives vs. business logic).
-- [ ] Pick and install a UI primitive library (shadcn/ui, Radix, Headless UI) or explicitly decide to roll your own — document the choice in `docs/architecture.md`.
-
-## Security & data integrity
-
-- [ ] Decide on auth provider (Auth.js, Clerk, Supabase Auth) before writing any user-facing route. Document in `docs/architecture.md`.
-- [ ] Decide on database + ORM (Postgres + Drizzle/Prisma is the default). Capture migration workflow in `docs/database.md`.
-- [ ] Add input validation at every server boundary using Zod (or similar) — server actions, route handlers, form submissions.
-- [ ] Move every secret to environment variables; never hardcode. Add a pre-commit check (e.g. `gitleaks`) once a real codebase exists.
-
-## Core reliability
-
-- [ ] Add a global `app/error.tsx` and `app/not-found.tsx` with usable UI, not the defaults.
-- [ ] Add a `loading.tsx` for each route segment that fetches data.
-- [ ] Wire up a request-scoped logger (pino or similar) and use it in server code instead of `console.log`.
+- [ ] Guard `useStrategies`/`useWatchlist` against corrupt `localStorage` values (JSON parse failure currently throws). Fall back to empty state and log.
+- [ ] Add an export/import flow for strategies + watchlist so a cleared browser doesn't lose months of notes.
+- [ ] Decide whether to move strategies to a backing store (Supabase Postgres is the default); document the decision in `docs/architecture.md` before implementing.
 
 ## Testing
 
-- [ ] Pick a test stack (Vitest + React Testing Library for units, Playwright for E2E) and wire `make test` to actually run something.
-- [ ] Add one smoke E2E test that loads `/` and asserts the app renders — a canary against total regressions.
-- [ ] Add unit tests for any `lib/` module as it's written; don't let business logic land without tests.
+- [ ] Pick Vitest + React Testing Library for units, Playwright for E2E. Wire `make test` to actually run something.
+- [ ] Unit-test `lib/patterns/patterns.ts` — 21 detectors with hardcoded confidence scores are the highest-value regression surface. Use fixture candles per pattern.
+- [ ] Unit-test `lib/hooks/useMarketData.ts` transforms (CoinGecko → `PriceData`, ExchangeRate → `ForexRate` with pair inversion).
+- [ ] Smoke E2E: load `/`, `/crypto`, `/forex`, `/strategies`, `/watchlist`; assert no console errors and the sidebar renders.
 
 ## CI/CD
 
-- [ ] Add `.github/workflows/ci.yml` running `make lint`, `make typecheck`, `make test`, `make build` on every PR.
-- [ ] `vercel link` the repo and configure preview deployments per PR.
-- [ ] Wire `make deploy TARGET=prod` and `make deploy TARGET=preview` to the Vercel CLI.
+- [ ] Add `.github/workflows/ci.yml` running `make lint && make typecheck && make build` on every PR. Skip `make test` until a runner is wired.
+- [ ] `gh repo view` / confirm remote exists; `vercel link` the repo and enable preview deployments per PR.
+- [ ] Implement `make deploy TARGET=prod|preview` against the Vercel CLI; update `make logs` and `make status` to use `vercel logs --follow` / `vercel ls`.
 
 ## Observability
 
-- [ ] Add Sentry (or equivalent) for server + client error tracking before the first real user touches prod.
-- [ ] Add a `/api/health` route returning build SHA + status for uptime monitoring.
-- [ ] Configure Vercel Analytics or a self-hosted equivalent for basic usage signal.
+- [ ] Add Sentry for server + client error tracking before the first real user touches prod. Scrub any stray upstream API responses from breadcrumbs.
+- [ ] Add `/api/health` returning `{ status: "ok", sha: process.env.VERCEL_GIT_COMMIT_SHA }` for uptime monitoring.
+- [ ] Enable Vercel Analytics (or Plausible) once linked.
 
 ## Performance
 
-- [ ] Audit every image for `next/image` usage; no raw `<img>` tags for non-trivial assets.
-- [ ] Add `generateMetadata` to every route for SEO + social previews.
-- [ ] Run Lighthouse on the main flow and track scores in `docs/performance.md`.
+- [ ] Profile `/crypto` detail panel: `useCryptoOHLC` + `detectPatterns` run on every selection change — memoize detector output per coin/time range.
+- [ ] Audit images: `public/` assets should go through `next/image`; avoid raw `<img>` tags.
+- [ ] Add `generateMetadata` per route for SEO + social previews (today only the root layout sets a title).
+
+## UX polish
+
+- [ ] Replace the "Loading..." text on `/crypto` and `/forex` with skeleton cards matching the final layout.
+- [ ] Surface network/upstream errors in-page (today failed SWR fetches are invisible beyond a blank card).
+- [ ] Add a confirm step to strategy delete — current single-click delete is easy to trigger accidentally.
 
 ## Developer experience
 
-- [ ] Add `prettier` + a shared config; wire into `make lint` or a separate `make fmt`.
-- [ ] Install `husky` + `lint-staged` to run lint/typecheck on staged files pre-commit.
-- [ ] Write `docs/onboarding.md` covering local setup from clone → running app in under 10 minutes.
+- [ ] Add Prettier + shared config; wire into `make lint` or a separate `make fmt`.
+- [ ] Install Husky + lint-staged to run lint/typecheck on staged files pre-commit.
+- [ ] Add a pre-commit secret scan (`gitleaks`) ahead of adding any API keys.
+- [ ] Write `docs/onboarding.md` — clone to running app in under 10 minutes.
