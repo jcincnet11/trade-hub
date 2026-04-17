@@ -6,8 +6,11 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Trade Hub',
-  description: 'Personal trading dashboard',
+  title: {
+    default: 'Trade Hub',
+    template: '%s · Trade Hub',
+  },
+  description: 'Personal trading dashboard — live crypto + forex markets, candlestick pattern detection, and strategy notes.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

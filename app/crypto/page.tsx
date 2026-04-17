@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useCryptoPrices, useCryptoOHLC } from '@/lib/hooks/useMarketData'
 import { useWatchlist } from '@/lib/hooks/useWatchlist'
 import { detectPatterns } from '@/lib/patterns/detector'
@@ -12,7 +12,10 @@ import { RefreshCw } from 'lucide-react'
 
 function DetailPanel({ item, onClose }: { item: MarketItem; onClose: () => void }) {
   const { candles } = useCryptoOHLC(item.id)
-  const patterns = candles.length ? detectPatterns(candles) : item.patterns
+  const patterns = useMemo(
+    () => (candles.length ? detectPatterns(candles) : item.patterns),
+    [candles, item.patterns]
+  )
 
   return (
     <div style={{

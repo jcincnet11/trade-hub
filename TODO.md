@@ -39,9 +39,9 @@ Status markers: `[ ]` open · `[~]` in progress · `[x]` done.
 
 ## Performance
 
-- [ ] Profile `/crypto` detail panel: `useCryptoOHLC` + `detectPatterns` run on every selection change — memoize detector output per coin/time range.
-- [ ] Audit images: `public/` assets should go through `next/image`; avoid raw `<img>` tags.
-- [ ] Add `generateMetadata` per route for SEO + social previews (today only the root layout sets a title).
+- [x] Profile `/crypto` detail panel: memoize `detectPatterns(candles)` with useMemo keyed on candles + item.patterns.
+- [x] Audit images: no raw `<img>` tags in the codebase — `public/` assets are unused at the moment.
+- [x] Add `generateMetadata` per route: root layout sets default + template; crypto/forex/strategies/watchlist each ship a `layout.tsx` with route-specific title/description.
 
 ## UX polish
 
