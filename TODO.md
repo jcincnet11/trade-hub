@@ -28,14 +28,14 @@ Status markers: `[ ]` open · `[~]` in progress · `[x]` done.
 ## CI/CD
 
 - [x] Add `.github/workflows/ci.yml` running lint, typecheck, unit tests, build, and Playwright smoke on every PR.
-- [ ] `gh repo view` / confirm remote exists; `vercel link` the repo and enable preview deployments per PR.
-- [ ] Implement `make deploy TARGET=prod|preview` against the Vercel CLI; update `make logs` and `make status` to use `vercel logs --follow` / `vercel ls`.
+- [x] `vercel link` the repo (linked to `jcincnet11s-projects/trade-hub`). Preview deploys per PR happen automatically once the repo is imported in the Vercel dashboard.
+- [x] Implement `make deploy TARGET=prod|preview` against the Vercel CLI; `make logs` and `make status` use `vercel logs --follow` / `vercel ls`.
 
 ## Observability
 
 - [ ] Add Sentry for server + client error tracking before the first real user touches prod. Scrub any stray upstream API responses from breadcrumbs. _(needs Sentry DSN from user)_
 - [x] Add `/api/health` returning `{ status: "ok", sha, env, at }` for uptime monitoring.
-- [ ] Enable Vercel Analytics (or Plausible) once linked. _(depends on `vercel link`)_
+- [x] Enable Vercel Analytics (wired via `@vercel/analytics/next` in `app/layout.tsx`; turn it on in the Vercel dashboard if not already).
 
 ## Performance
 

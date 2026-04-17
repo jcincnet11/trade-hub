@@ -44,25 +44,21 @@ typecheck: ## Run TypeScript type checking
 	npx tsc --noEmit
 
 # ── Deploy & Manage ───────────────────────────────────────
-# TODO: no deploy target configured yet. Likely Vercel (Next.js default).
-# Wire up once `vercel link` has been run against a project.
+# Vercel CLI (jcincnet11s-projects/trade-hub). `.vercel/` holds the link.
 
-deploy: ## Deploy to a target (usage: make deploy TARGET=prod)
-	@test -n "$(TARGET)" || (echo "Usage: make deploy TARGET=<target>" && exit 1)
-	@echo "Deploying $(PROJECT_NAME) to $(TARGET)..."
-	# vercel deploy --prod        # when TARGET=prod
-	# vercel deploy               # when TARGET=preview
-	@echo "TODO: configure deploy — run 'vercel link' first, then wire this target"
+deploy: ## Deploy to a target (usage: make deploy TARGET=prod|preview)
+	@test -n "$(TARGET)" || (echo "Usage: make deploy TARGET=prod|preview" && exit 1)
+ifeq ($(TARGET),prod)
+	vercel deploy --prod --yes
+else
+	vercel deploy --yes
+endif
 
-logs: ## Tail logs (usage: make logs TARGET=prod)
-	@test -n "$(TARGET)" || (echo "Usage: make logs TARGET=<target>" && exit 1)
-	# vercel logs --follow
-	@echo "TODO: configure logs — depends on deploy target"
+logs: ## Tail logs for the latest deployment (usage: make logs [TARGET=prod])
+	vercel logs $(if $(filter prod,$(TARGET)),--scope jcincnet11s-projects,) --follow
 
-status: ## Show project status
-	@echo "$(PROJECT_NAME) status..."
-	# vercel ls
-	@echo "TODO: configure status — depends on deploy target"
+status: ## List recent deployments
+	vercel ls
 
 # ── Utilities ─────────────────────────────────────────────
 

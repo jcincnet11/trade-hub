@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import { Analytics } from '@vercel/analytics/next'
 import { Sidebar } from '@/components/layout/Sidebar'
 import './globals.css'
 
@@ -10,7 +11,8 @@ export const metadata: Metadata = {
     default: 'Trade Hub',
     template: '%s · Trade Hub',
   },
-  description: 'Personal trading dashboard — live crypto + forex markets, candlestick pattern detection, and strategy notes.',
+  description:
+    'Personal trading dashboard — live crypto + forex markets, candlestick pattern detection, and strategy notes.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -21,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="main-content" style={{ padding: '1.5rem', minHeight: '100vh' }}>
           {children}
         </main>
+        <Analytics />
       </body>
     </html>
   )
