@@ -20,10 +20,10 @@ Status markers: `[ ]` open · `[~]` in progress · `[x]` done.
 
 ## Testing
 
-- [ ] Pick Vitest + React Testing Library for units, Playwright for E2E. Wire `make test` to actually run something.
-- [ ] Unit-test `lib/patterns/patterns.ts` — 21 detectors with hardcoded confidence scores are the highest-value regression surface. Use fixture candles per pattern.
-- [ ] Unit-test `lib/hooks/useMarketData.ts` transforms (CoinGecko → `PriceData`, ExchangeRate → `ForexRate` with pair inversion).
-- [ ] Smoke E2E: load `/`, `/crypto`, `/forex`, `/strategies`, `/watchlist`; assert no console errors and the sidebar renders.
+- [x] Pick Vitest + React Testing Library for units, Playwright for E2E. Wire `make test` to actually run something.
+- [x] Unit-test `lib/patterns/patterns.ts` — 21 detectors with hardcoded confidence scores are the highest-value regression surface. Use fixture candles per pattern.
+- [x] Unit-test `lib/hooks/useMarketData.ts` transforms (CoinGecko → `PriceData`, ExchangeRate → `ForexRate` with pair inversion).
+- [x] Smoke E2E: load `/`, `/crypto`, `/forex`, `/strategies`, `/watchlist`; assert no console errors and the sidebar renders.
 
 ## CI/CD
 
