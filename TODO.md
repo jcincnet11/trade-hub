@@ -16,7 +16,7 @@ Status markers: `[ ]` open · `[~]` in progress · `[x]` done.
 
 - [x] Guard `useStrategies`/`useWatchlist` against corrupt `localStorage` values (Zod-validate on load; reset + warn on invalid).
 - [x] Add an export/import flow for strategies + watchlist so a cleared browser doesn't lose months of notes.
-- [ ] Decide whether to move strategies to a backing store (Supabase Postgres is the default); document the decision in `docs/architecture.md` before implementing. *(needs product decision)*
+- [ ] Decide whether to move strategies to a backing store (Supabase Postgres is the default); document the decision in `docs/architecture.md` before implementing. _(needs product decision)_
 
 ## Testing
 
@@ -33,9 +33,9 @@ Status markers: `[ ]` open · `[~]` in progress · `[x]` done.
 
 ## Observability
 
-- [ ] Add Sentry for server + client error tracking before the first real user touches prod. Scrub any stray upstream API responses from breadcrumbs. *(needs Sentry DSN from user)*
+- [ ] Add Sentry for server + client error tracking before the first real user touches prod. Scrub any stray upstream API responses from breadcrumbs. _(needs Sentry DSN from user)_
 - [x] Add `/api/health` returning `{ status: "ok", sha, env, at }` for uptime monitoring.
-- [ ] Enable Vercel Analytics (or Plausible) once linked. *(depends on `vercel link`)*
+- [ ] Enable Vercel Analytics (or Plausible) once linked. _(depends on `vercel link`)_
 
 ## Performance
 
@@ -51,7 +51,7 @@ Status markers: `[ ]` open · `[~]` in progress · `[x]` done.
 
 ## Developer experience
 
-- [ ] Add Prettier + shared config; wire into `make lint` or a separate `make fmt`.
-- [ ] Install Husky + lint-staged to run lint/typecheck on staged files pre-commit.
-- [ ] Add a pre-commit secret scan (`gitleaks`) ahead of adding any API keys.
-- [ ] Write `docs/onboarding.md` — clone to running app in under 10 minutes.
+- [x] Add Prettier + shared config; wired into `make fmt` / `make fmt-check` and lint-staged.
+- [x] Install Husky + lint-staged to run Prettier + ESLint on staged files pre-commit.
+- [x] Add gitleaks secret scan (GitHub Action) ahead of adding any API keys.
+- [x] Write `docs/onboarding.md` — clone to running app in under 10 minutes.
