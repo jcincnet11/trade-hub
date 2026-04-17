@@ -6,11 +6,11 @@ Status markers: `[ ]` open · `[~]` in progress · `[x]` done.
 
 ## Reliability (the app breaks silently today)
 
-- [ ] Add `app/error.tsx` and `app/not-found.tsx` with branded, useful UI — currently unhandled errors fall through to Next.js defaults.
-- [ ] Add `loading.tsx` for each data-fetching route segment (`app/crypto/`, `app/forex/`, `app/watchlist/`, `app/strategies/`) so first paint doesn't flash empty state.
-- [ ] Fix silent `catch` blocks in `app/api/**/route.ts` — at minimum, log the error and return a typed error response instead of swallowing it.
+- [x] Add `app/error.tsx` and `app/not-found.tsx` with branded, useful UI — currently unhandled errors fall through to Next.js defaults.
+- [x] Add `loading.tsx` for each data-fetching route segment (`app/crypto/`, `app/forex/`, `app/watchlist/`, `app/strategies/`) so first paint doesn't flash empty state.
+- [x] Fix silent `catch` blocks in `app/api/**/route.ts` — at minimum, log the error and return a typed error response instead of swallowing it.
 - [ ] Validate upstream API responses with Zod in each route handler (`/api/crypto/prices`, `/api/crypto/ohlc/[id]`, `/api/forex/rates`) before returning them — a schema drift from CoinGecko or ExchangeRate API currently crashes the hooks.
-- [ ] Wire a request-scoped logger (pino) and replace `console.log`/silent catches in route handlers.
+- [ ] Wire a request-scoped logger (pino) and replace `console.error` breadcrumbs with structured logs.
 
 ## Data & state integrity
 

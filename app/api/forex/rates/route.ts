@@ -6,10 +6,11 @@ export async function GET() {
       'https://api.exchangerate-api.com/v4/latest/USD',
       { next: { revalidate: 3600 } }
     )
-    if (!res.ok) throw new Error('ExchangeRate error')
+    if (!res.ok) throw new Error(`ExchangeRate ${res.status}`)
     const data = await res.json()
     return NextResponse.json(data.rates)
-  } catch {
+  } catch (err) {
+    console.error('[api/forex/rates]', err)
     return NextResponse.json({ error: 'Failed to fetch forex' }, { status: 500 })
   }
 }

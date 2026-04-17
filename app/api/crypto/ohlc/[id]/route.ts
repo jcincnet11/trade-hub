@@ -10,7 +10,7 @@ export async function GET(
       `https://api.coingecko.com/api/v3/coins/${id}/ohlc?vs_currency=usd&days=14`,
       { next: { revalidate: 300 } }
     )
-    if (!res.ok) throw new Error('CoinGecko OHLC error')
+    if (!res.ok) throw new Error(`CoinGecko OHLC ${res.status}`)
     const data = (await res.json()) as number[][]
     const candles = data.map((c) => ({
       time: Math.floor(c[0] / 1000),
@@ -20,7 +20,8 @@ export async function GET(
       close: c[4],
     }))
     return NextResponse.json(candles)
-  } catch {
+  } catch (err) {
+    console.error('[api/crypto/ohlc]', err)
     return NextResponse.json({ error: 'Failed to fetch OHLC' }, { status: 500 })
   }
 }

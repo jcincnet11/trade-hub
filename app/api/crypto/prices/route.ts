@@ -8,10 +8,11 @@ export async function GET() {
       `https://api.coingecko.com/api/v3/simple/price?ids=${COINS}&vs_currencies=usd&include_24hr_change=true&include_24hr_vol=true&include_market_cap=true`,
       { next: { revalidate: 60 } }
     )
-    if (!res.ok) throw new Error('CoinGecko error')
+    if (!res.ok) throw new Error(`CoinGecko ${res.status}`)
     const data = await res.json()
     return NextResponse.json(data)
-  } catch {
+  } catch (err) {
+    console.error('[api/crypto/prices]', err)
     return NextResponse.json({ error: 'Failed to fetch prices' }, { status: 500 })
   }
 }

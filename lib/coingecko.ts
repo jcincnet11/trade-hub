@@ -51,7 +51,10 @@ export async function fetchOHLC(id: string, days: number): Promise<OHLCCandle[] 
       `https://api.coingecko.com/api/v3/coins/${id}/ohlc?vs_currency=usd&days=${days}`,
       { next: { revalidate: 300 } }
     )
-    if (!res.ok) return null
+    if (!res.ok) {
+      console.error('[coingecko.fetchOHLC]', id, `status=${res.status}`)
+      return null
+    }
     const raw = (await res.json()) as number[][]
     return raw.map((c) => ({
       time: Math.floor(c[0] / 1000),
@@ -60,7 +63,8 @@ export async function fetchOHLC(id: string, days: number): Promise<OHLCCandle[] 
       low: c[3],
       close: c[4],
     }))
-  } catch {
+  } catch (err) {
+    console.error('[coingecko.fetchOHLC]', id, err)
     return null
   }
 }
@@ -76,10 +80,14 @@ export async function fetchVolumes(id: string, days: number): Promise<VolumePoin
       `https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=usd&days=${days}`,
       { next: { revalidate: 300 } }
     )
-    if (!res.ok) return null
+    if (!res.ok) {
+      console.error('[coingecko.fetchVolumes]', id, `status=${res.status}`)
+      return null
+    }
     const data = (await res.json()) as { total_volumes?: [number, number][] }
     return (data.total_volumes ?? []).map(([t, v]) => ({ time: Math.floor(t / 1000), volume: v }))
-  } catch {
+  } catch (err) {
+    console.error('[coingecko.fetchVolumes]', id, err)
     return null
   }
 }
