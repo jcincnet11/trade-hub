@@ -25,8 +25,11 @@ start: ## Start the production server (after build)
 
 # ── Quality ───────────────────────────────────────────────
 
-test: ## Run tests
-	@echo "TODO: no test runner configured yet — add vitest/jest/playwright"
+test: ## Run unit tests (vitest)
+	npm test
+
+test-e2e: ## Run Playwright E2E tests (requires `npx playwright install chromium` once)
+	npm run test:e2e
 
 lint: ## Lint the codebase
 	npm run lint
