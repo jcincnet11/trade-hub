@@ -16,6 +16,9 @@
 /test-results
 /.playwright
 
+# husky (auto-generated runtime)
+/.husky/_
+
 # next.js
 /.next/
 /out/
