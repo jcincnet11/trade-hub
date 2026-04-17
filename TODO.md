@@ -33,9 +33,9 @@ Status markers: `[ ]` open · `[~]` in progress · `[x]` done.
 
 ## Observability
 
-- [ ] Add Sentry for server + client error tracking before the first real user touches prod. Scrub any stray upstream API responses from breadcrumbs.
-- [ ] Add `/api/health` returning `{ status: "ok", sha: process.env.VERCEL_GIT_COMMIT_SHA }` for uptime monitoring.
-- [ ] Enable Vercel Analytics (or Plausible) once linked.
+- [ ] Add Sentry for server + client error tracking before the first real user touches prod. Scrub any stray upstream API responses from breadcrumbs. *(needs Sentry DSN from user)*
+- [x] Add `/api/health` returning `{ status: "ok", sha, env, at }` for uptime monitoring.
+- [ ] Enable Vercel Analytics (or Plausible) once linked. *(depends on `vercel link`)*
 
 ## Performance
 
