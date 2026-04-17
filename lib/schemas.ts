@@ -37,6 +37,27 @@ export const frankfurterResponseSchema = z.object({
 })
 export type FrankfurterResponse = z.infer<typeof frankfurterResponseSchema>
 
+// Twelve Data /time_series — real intraday forex OHLC (requires API key).
+const twelveDataCandleSchema = z.object({
+  datetime: z.string(),
+  open: z.string(),
+  high: z.string(),
+  low: z.string(),
+  close: z.string(),
+})
+export const twelveDataResponseSchema = z.discriminatedUnion('status', [
+  z.object({
+    status: z.literal('ok'),
+    values: z.array(twelveDataCandleSchema),
+  }),
+  z.object({
+    status: z.literal('error'),
+    message: z.string(),
+    code: z.number().optional(),
+  }),
+])
+export type TwelveDataResponse = z.infer<typeof twelveDataResponseSchema>
+
 // Persistent user data — used both to validate on localStorage read and
 // to validate imported export bundles.
 export const strategySchema = z.object({

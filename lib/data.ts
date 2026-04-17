@@ -29,3 +29,18 @@ export async function fetchForexOHLC(pair: string, days: ForexDays): Promise<OHL
   if (!res.ok) throw new Error(`forex ohlc ${res.status}`)
   return res.json()
 }
+
+export type ForexIntraday = '15min' | '30min' | '1h'
+
+export async function fetchForexIntraday(
+  pair: string,
+  interval: ForexIntraday,
+): Promise<OHLCCandle[]> {
+  const slug = pair.replace('/', '-')
+  const res = await fetch(`/api/forex/intraday/${encodeURIComponent(slug)}?interval=${interval}`)
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body?.error || `forex intraday ${res.status}`)
+  }
+  return res.json()
+}

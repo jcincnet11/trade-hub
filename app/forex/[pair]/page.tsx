@@ -4,31 +4,45 @@ import useSWR from 'swr'
 import Link from 'next/link'
 import { ArrowLeft, Plus } from 'lucide-react'
 import { CandleChart } from '@/components/market/CandleChart'
-import { fetchForexOHLC, type ForexDays } from '@/lib/data'
+import { fetchForexIntraday, fetchForexOHLC, type ForexDays, type ForexIntraday } from '@/lib/data'
 import { detectAll } from '@/lib/patterns/detector'
 
-const TIMEFRAMES: Array<{ label: string; days: ForexDays }> = [
-  { label: '7D', days: 7 },
-  { label: '14D', days: 14 },
-  { label: '30D', days: 30 },
-  { label: '90D', days: 90 },
-  { label: '180D', days: 180 },
-  { label: '1Y', days: 365 },
+type Timeframe =
+  | { label: string; kind: 'intraday'; interval: ForexIntraday }
+  | { label: string; kind: 'daily'; days: ForexDays }
+
+const TIMEFRAMES: Timeframe[] = [
+  { label: '15m', kind: 'intraday', interval: '15min' },
+  { label: '30m', kind: 'intraday', interval: '30min' },
+  { label: '1h', kind: 'intraday', interval: '1h' },
+  { label: '7D', kind: 'daily', days: 7 },
+  { label: '14D', kind: 'daily', days: 14 },
+  { label: '30D', kind: 'daily', days: 30 },
+  { label: '90D', kind: 'daily', days: 90 },
+  { label: '180D', kind: 'daily', days: 180 },
+  { label: '1Y', kind: 'daily', days: 365 },
 ]
 
 export default function ForexDetailPage({ params }: { params: Promise<{ pair: string }> }) {
   const { pair } = use(params)
   const display = pair.replace('-', '/')
-  const [days, setDays] = useState<ForexDays>(90)
+  const [tf, setTf] = useState<Timeframe>(() => TIMEFRAMES[5]) // default 30D
 
   const {
     data: candles,
     isLoading,
     error,
-  } = useSWR(`forex-ohlc-${pair}-${days}`, () => fetchForexOHLC(display, days), {
-    refreshInterval: 300_000,
-    revalidateOnFocus: false,
-  })
+  } = useSWR(
+    `forex-${tf.kind}-${pair}-${tf.kind === 'intraday' ? tf.interval : tf.days}`,
+    () =>
+      tf.kind === 'intraday'
+        ? fetchForexIntraday(display, tf.interval)
+        : fetchForexOHLC(display, tf.days),
+    {
+      refreshInterval: tf.kind === 'intraday' ? 60_000 : 300_000,
+      revalidateOnFocus: false,
+    },
+  )
 
   const patterns = useMemo(() => (candles ? detectAll(candles) : []), [candles])
   const last = candles?.[candles.length - 1]
@@ -77,7 +91,7 @@ export default function ForexDetailPage({ params }: { params: Promise<{ pair: st
                 }}
               >
                 {change >= 0 ? '+' : ''}
-                {change.toFixed(2)}% · {days}d
+                {change.toFixed(2)}% · {tf.label}
               </span>
             </div>
           )}
@@ -102,24 +116,27 @@ export default function ForexDetailPage({ params }: { params: Promise<{ pair: st
         </Link>
       </div>
 
-      <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
-        {TIMEFRAMES.map((t) => (
-          <button
-            key={t.label}
-            onClick={() => setDays(t.days)}
-            style={{
-              padding: '5px 10px',
-              borderRadius: '6px',
-              fontSize: '11px',
-              cursor: 'pointer',
-              background: days === t.days ? 'var(--indigo-dim)' : 'var(--bg-secondary)',
-              border: `0.5px solid ${days === t.days ? 'var(--indigo)' : 'var(--border)'}`,
-              color: days === t.days ? 'var(--indigo)' : 'var(--text-secondary)',
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+        {TIMEFRAMES.map((t) => {
+          const active = t.label === tf.label
+          return (
+            <button
+              key={t.label}
+              onClick={() => setTf(t)}
+              style={{
+                padding: '5px 10px',
+                borderRadius: '6px',
+                fontSize: '11px',
+                cursor: 'pointer',
+                background: active ? 'var(--indigo-dim)' : 'var(--bg-secondary)',
+                border: `0.5px solid ${active ? 'var(--indigo)' : 'var(--border)'}`,
+                color: active ? 'var(--indigo)' : 'var(--text-secondary)',
+              }}
+            >
+              {t.label}
+            </button>
+          )
+        })}
       </div>
 
       {error && (
@@ -134,7 +151,22 @@ export default function ForexDetailPage({ params }: { params: Promise<{ pair: st
             fontSize: '12px',
           }}
         >
-          Couldn&apos;t load OHLC. Retrying automatically.
+          {tf.kind === 'intraday' && String(error.message).includes('not configured') ? (
+            <>
+              Forex intraday needs a Twelve Data API key.{' '}
+              <a
+                href="https://twelvedata.com/register"
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: 'var(--red)', textDecoration: 'underline' }}
+              >
+                Get one free
+              </a>
+              , then add <code>TWELVE_DATA_API_KEY</code> to the Vercel environment.
+            </>
+          ) : (
+            <>Couldn&apos;t load OHLC. Retrying automatically.</>
+          )}
         </div>
       )}
 
@@ -199,8 +231,9 @@ export default function ForexDetailPage({ params }: { params: Promise<{ pair: st
           Detected patterns ({patterns.length})
         </h2>
         <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '10px' }}>
-          Forex data is daily ECB close. Intraday wicks are synthesized (±0.1%), so single-wick
-          patterns are approximate.
+          {tf.kind === 'intraday'
+            ? 'Intraday OHLC via Twelve Data (real bid/ask).'
+            : 'Daily ECB close via Frankfurter. Intraday wicks on daily candles are synthesized (±0.1%), so single-wick patterns are approximate.'}
         </p>
         {patterns.length === 0 ? (
           <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
