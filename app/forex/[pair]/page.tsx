@@ -8,6 +8,8 @@ import { fetchForexOHLC, type ForexDays } from '@/lib/data'
 import { detectAll } from '@/lib/patterns/detector'
 
 const TIMEFRAMES: Array<{ label: string; days: ForexDays }> = [
+  { label: '7D', days: 7 },
+  { label: '14D', days: 14 },
   { label: '30D', days: 30 },
   { label: '90D', days: 90 },
   { label: '180D', days: 180 },

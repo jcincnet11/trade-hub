@@ -12,8 +12,11 @@ import { formatPrice, formatChange } from '@/lib/utils/formatters'
 const TIMEFRAMES: Array<{ label: string; days: CryptoDays }> = [
   { label: '1D', days: 1 },
   { label: '7D', days: 7 },
+  { label: '14D', days: 14 },
   { label: '30D', days: 30 },
   { label: '90D', days: 90 },
+  { label: '180D', days: 180 },
+  { label: '1Y', days: 365 },
 ]
 
 export default function CryptoDetailPage({ params }: { params: Promise<{ id: string }> }) {

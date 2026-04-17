@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
 import { frankfurterResponseSchema } from '@/lib/schemas'
 
-const ALLOWED_DAYS = new Set([30, 90, 180, 365])
+const ALLOWED_DAYS = new Set([7, 14, 30, 90, 180, 365])
 const PAIR_RE = /^([A-Z]{3})-([A-Z]{3})$/
 
 export async function GET(request: Request, { params }: { params: Promise<{ pair: string }> }) {

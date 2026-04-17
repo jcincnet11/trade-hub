@@ -4,7 +4,7 @@ import type { OHLCCandle } from './types/market'
 // get ISR caching + centralized logging + Zod validation at the boundary.
 
 export type CryptoDays = 1 | 7 | 14 | 30 | 90 | 180 | 365
-export type ForexDays = 30 | 90 | 180 | 365
+export type ForexDays = 7 | 14 | 30 | 90 | 180 | 365
 
 export async function fetchCryptoOHLC(id: string, days: CryptoDays): Promise<OHLCCandle[]> {
   const res = await fetch(`/api/crypto/ohlc/${encodeURIComponent(id)}?days=${days}`)
