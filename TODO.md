@@ -27,7 +27,7 @@ Status markers: `[ ]` open · `[~]` in progress · `[x]` done.
 
 ## CI/CD
 
-- [ ] Add `.github/workflows/ci.yml` running `make lint && make typecheck && make build` on every PR. Skip `make test` until a runner is wired.
+- [x] Add `.github/workflows/ci.yml` running lint, typecheck, unit tests, build, and Playwright smoke on every PR.
 - [ ] `gh repo view` / confirm remote exists; `vercel link` the repo and enable preview deployments per PR.
 - [ ] Implement `make deploy TARGET=prod|preview` against the Vercel CLI; update `make logs` and `make status` to use `vercel logs --follow` / `vercel ls`.
 
