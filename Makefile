@@ -44,7 +44,7 @@ typecheck: ## Run TypeScript type checking
 	npx tsc --noEmit
 
 # ── Deploy & Manage ───────────────────────────────────────
-# Vercel CLI (jcincnet11s-projects/trade-hub). `.vercel/` holds the link.
+# Vercel CLI (jvincentdigital-projects/trade-hub). `.vercel/` holds the link.
 
 deploy: ## Deploy to a target (usage: make deploy TARGET=prod|preview)
 	@test -n "$(TARGET)" || (echo "Usage: make deploy TARGET=prod|preview" && exit 1)
@@ -55,7 +55,7 @@ else
 endif
 
 logs: ## Tail logs for the latest deployment (usage: make logs [TARGET=prod])
-	vercel logs $(if $(filter prod,$(TARGET)),--scope jcincnet11s-projects,) --follow
+	vercel logs $(if $(filter prod,$(TARGET)),--scope jvincentdigital-projects,) --follow
 
 status: ## List recent deployments
 	vercel ls
