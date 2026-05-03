@@ -8,7 +8,7 @@ Trade Hub is a single-user web dashboard for crypto and forex markets: live pric
 
 ## Tech Stack
 
-- **Framework:** Next.js 16 (App Router) — *breaking changes from prior versions; see AGENTS.md*
+- **Framework:** Next.js 16 (App Router) — _breaking changes from prior versions; see AGENTS.md_
 - **UI:** React 19 + Tailwind CSS v4 (via `@tailwindcss/postcss`, CSS-first; no `tailwind.config.*`)
 - **Language:** TypeScript 5 (strict)
 - **Data fetching:** SWR v2 on the client; Next.js fetch + ISR (`revalidate`) on route handlers
@@ -35,36 +35,34 @@ Complex commands that need real bash logic live in `scripts/` and are called fro
 ## Project Structure
 
 ```
-app/                    # Next.js App Router
-  api/                  #   Route handlers (proxy CoinGecko + ExchangeRate API)
-    crypto/prices/      #     GET  live prices for 10 coins
-    crypto/ohlc/[id]/   #     GET  OHLC candles (granularity from days param)
-    forex/rates/        #     GET  USD-based rates for 8 pairs
-    scanner/            #     GET  MM Confluence v2 setup scanner (crypto-only)
-  crypto/               #   Crypto explorer (grid + detail panel w/ chart + patterns)
-    loading.tsx         #     Skeleton grid for first paint
-  forex/                #   Forex pair cards
-    loading.tsx
-  strategies/           #   Strategy CRUD + live scanner (localStorage)
-    _components/        #     SetupScanner.tsx (live MM Confluence cards)
-    loading.tsx
-  watchlist/            #   User-selected pairs (localStorage)
-    loading.tsx
-  error.tsx             #   Branded error boundary w/ reset
-  not-found.tsx         #   Branded 404 page
-  layout.tsx            #   Root layout + sidebar
-  page.tsx              #   Dashboard (aggregated sentiment)
-components/
-  layout/Sidebar.tsx    # Responsive nav (desktop sidebar / mobile bottom bar)
-  market/               # PairCard, PatternBadge, PriceChart
-  ui/                   # Badge, Card primitives
-lib/
-  coingecko.ts          # COIN_MAP + fetchOHLC / fetchVolumes helpers
-  hooks/                # useMarketData, useStrategies, useWatchlist (SWR + localStorage)
-  patterns/             # 21 candlestick detectors + orchestrator (detectPatterns)
-  scanner/              # MM Confluence v2: ema, rsi, detectMWFormation, scoreSetup
-  types/                # market.ts, strategy.ts
-  utils/formatters.ts   # Price/change/volume/market-cap formatting
+src/
+  app/                  # Next.js App Router
+    api/                #   Route handlers (proxy CoinGecko + ExchangeRate API)
+      crypto/prices/    #     GET  live prices for 10 coins
+      crypto/ohlc/[id]/ #     GET  OHLC candles (granularity from days param)
+      forex/rates/      #     GET  USD-based rates for 8 pairs
+      scanner/          #     GET  MM Confluence v2 setup scanner (crypto-only)
+    crypto/             #   Crypto explorer (grid + detail panel w/ chart + patterns)
+    forex/              #   Forex pair cards
+    strategies/         #   Strategy CRUD + live scanner (localStorage)
+      _components/      #     SetupScanner.tsx (live MM Confluence cards)
+    watchlist/          #   User-selected pairs (localStorage)
+    error.tsx           #   Branded error boundary w/ reset
+    not-found.tsx       #   Branded 404 page
+    layout.tsx          #   Root layout + sidebar
+    page.tsx            #   Dashboard (aggregated sentiment)
+  components/
+    layout/Sidebar.tsx  # Responsive nav (desktop sidebar / mobile bottom bar)
+    market/             # PairCard, PatternBadge, PriceChart
+    ui/                 # Badge, Card primitives
+  lib/
+    coingecko.ts        # COIN_MAP + fetchOHLC / fetchVolumes helpers
+    hooks/              # useMarketData, useStrategies, useWatchlist (SWR + localStorage)
+    patterns/           # 21 candlestick detectors + orchestrator (detectPatterns)
+    scanner/            # MM Confluence v2: ema, rsi, detectMWFormation, scoreSetup
+    types/              # market.ts, strategy.ts
+    utils/formatters.ts # Price/change/volume/market-cap formatting
+e2e/                    # Playwright tests
 public/                 # Static assets
 docs/                   # Living documentation
   strategies/           #   Per-strategy specs (e.g. mm-confluence-v2.md)
@@ -102,10 +100,12 @@ The `docs/` folder is the single source of truth for institutional knowledge.
 `.claude/skills/` teaches Claude project-specific conventions and provides reusable workflows as slash commands. See `docs/vibestack.md` for how to create new ones.
 
 **Reference skills** (auto-loaded as context):
+
 - `cli-first` — Use CLI tools and `.env*` files for third-party services
 - `lsp` — Use language servers for type checking, references, and code navigation
 
 **Task skills** (invoked via `/command`):
+
 - `/vibestack` — Set up VibeStack conventions for an existing project (CLAUDE.md, Makefile, docs, TODO.md)
 - `/docs` — Capture conversation learnings into docs and clean up stale content
 - `/todo` — Work through TODO.md tasks sequentially (`/todo populate` to re-analyze the codebase and seed the next batch of tasks)
@@ -116,16 +116,17 @@ The `docs/` folder is the single source of truth for institutional knowledge.
 This project uses CLI tools for all third-party service interactions. Before using any external API or SDK, check `.env*` files for existing credentials and project configuration. Prefer CLI tools (`aws`, `vercel`, `supabase`, `gh`, `stripe`, `gcloud`, etc.) over web dashboards or raw API calls. See the `cli-first` skill for details.
 
 Current integrations (both unauthenticated, free tier):
+
 - **CoinGecko** — `api.coingecko.com/api/v3/simple/price` and `/coins/{id}/ohlc`
 - **ExchangeRate API** — `api.exchangerate-api.com/v4/latest/USD`
 
 ## Conventions
 
-- **App Router only** — all routes live in `app/` as `page.tsx` / `layout.tsx` / `route.ts`. No `pages/` directory.
+- **App Router only** — all routes live in `src/app/` as `page.tsx` / `layout.tsx` / `route.ts`. No `pages/` directory.
 - **Server Components by default** — add `"use client"` only when necessary (hooks, event handlers, browser APIs). Today most page routes are client components because they use SWR/localStorage hooks; any non-interactive render should stay server.
-- **Tailwind v4** — configuration is CSS-first via `app/globals.css`; there is no `tailwind.config.*` file. Use CSS variables defined there (`--bg-primary`, `--green`, `--red`, etc.) instead of hardcoded colors.
+- **Tailwind v4** — configuration is CSS-first via `src/app/globals.css`; there is no `tailwind.config.*` file. Use CSS variables defined there (`--bg-primary`, `--green`, `--red`, etc.) instead of hardcoded colors.
 - **TypeScript strict** — prefer typed props/returns; keep `any` out of committed code. Market/strategy types live in `lib/types/`.
-- **Path alias** — `@/*` maps to the project root (see `tsconfig.json`). Use it instead of relative imports crossing directory boundaries.
-- **Data fetching** — SWR on the client via hooks in `lib/hooks/useMarketData.ts`; never call external APIs directly from components. Add new market data by extending a hook + the corresponding `app/api/*/route.ts`, keeping the `revalidate` value realistic for the upstream rate limit.
-- **Persistent state** — `localStorage` with the `trade-hub-*` prefix. Keep reads/writes inside `lib/hooks/` so components never touch `localStorage` directly.
+- **Path alias** — `@/*` maps to `src/*` (see `tsconfig.json`). Use it instead of relative imports crossing directory boundaries.
+- **Data fetching** — SWR on the client via hooks in `src/lib/hooks/useMarketData.ts`; never call external APIs directly from components. Add new market data by extending a hook + the corresponding `src/app/api/*/route.ts`, keeping the `revalidate` value realistic for the upstream rate limit.
+- **Persistent state** — `localStorage` with the `trade-hub-*` prefix. Keep reads/writes inside `src/lib/hooks/` so components never touch `localStorage` directly.
 - **Before writing Next.js code**, consult `node_modules/next/dist/docs/` — version 16 differs from prior training data.
